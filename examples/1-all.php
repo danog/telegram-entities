@@ -50,7 +50,7 @@ $entities = Entities::fromHtml("<b>This is <i>a ❤️ nested</i> test</b>");
 $sm($entities->message, entities: $entities->entities);
 
 // Convert markdown to an array of entities locally
-$entities = Entities::fromHtml("<b>This is <i>a ❤️ nested</i> test</b>");
+$entities = Entities::fromMarkdown("*This is _a ❤️ nested_ test*");
 $sm($entities->message, entities: $entities->entities);
 
 // See https://github.com/danog/telegram-entities for the full list of available methods!
