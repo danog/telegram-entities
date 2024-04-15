@@ -170,22 +170,13 @@ final class EntityTools
         );
     }
     /**
-     * Escape string for markdown codeblock.
-     *
-     * @param string $what String to escape
-     */
-    public static function markdownCodeblockEscape(string $what): string
-    {
-        return \str_replace('```', '\\```', $what);
-    }
-    /**
      * Escape string for markdown code section.
      *
      * @param string $what String to escape
      */
     public static function markdownCodeEscape(string $what): string
     {
-        return \str_replace('`', '\\`', $what);
+        return \str_replace(['`', '\\'], ['\\`', '\\\\'], $what);
     }
     /**
      * Escape string for URL.
@@ -194,6 +185,6 @@ final class EntityTools
      */
     public static function markdownUrlEscape(string $what): string
     {
-        return \str_replace(')', '\\)', $what);
+        return \str_replace([')', '\\'], ['\\)', '\\\\'], $what);
     }
 }
