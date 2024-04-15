@@ -1,4 +1,4 @@
-# Async ORM
+# telegram-entities
 
 [![codecov](https://codecov.io/gh/danog/telegram-entities/branch/master/graph/badge.svg)](https://codecov.io/gh/danog/telegram-entities)
 [![Psalm coverage](https://shepherd.dev/github/danog/telegram-entities/coverage.svg)](https://shepherd.dev/github/danog/telegram-entities)
@@ -9,12 +9,12 @@ A library to work with Telegram UTF-16 styled text entities, created by Daniil G
 
 This library can be used to modify entities returned by the Telegram Bot API, or even locally generate them using a custom MarkdownV2 and HTML parser inside of the library.  
 
-This ORM library was initially created for [MadelineProto](https://docs.madelineproto.xyz), an async PHP client API for the telegram MTProto protocol.  
+This library was initially created for [MadelineProto](https://docs.madelineproto.xyz), an async PHP client API for the telegram MTProto protocol.  
 
 ## Installation
 
 ```bash
-composer require danog/async-orm
+composer require danog/telegram-entities
 ```
 
 ## Usage
