@@ -7,7 +7,7 @@
 
 A library to work with Telegram UTF-16 styled text entities, created by Daniil Gentili (https://daniil.it).  
 
-This library can be used to modify entities returned by the Telegram Bot API, or even locally generate them using a custom MarkdownV2 and HTML parser inside of the library.  
+This library can be used to modify entities returned by the Telegram Bot API, convert entities to HTML or even locally generate them using a custom MarkdownV2 and HTML parser inside of the library.  
 
 This library was initially created for [MadelineProto](https://docs.madelineproto.xyz), an async PHP client API for the telegram MTProto protocol.  
 
@@ -74,6 +74,31 @@ $sm($entities->message, entities: $entities->entities);
 // Convert markdown to an array of entities locally
 $entities = Entities::fromMarkdown("*This is _a ❤️ nested_ test*");
 $sm($entities->message, entities: $entities->entities);
+
+// Escape text using utility methods
+$generic = EntityTools::markdownEscape("Automatically escaped to prevent *markdown injection*!");
+$link = EntityTools::markdownUrlEscape("https://google.com");
+$code = EntityTools::markdownCodeEscape("test with autoescaped ` test");
+$codeBlock = EntityTools::markdownCodeblockEscape("<?php echo 'test with autoescaped ``` test';");
+
+$entities = Entities::fromMarkdown("This is _a ❤️ [nested]($link)_ `$code`
+
+```php
+$codeBlock
+```
+
+$generic
+");
+
+$sm($entities->message, entities: $entities->entities);
+
+// Escape text for the HTML parser!
+$generic = EntityTools::htmlEscape("Automatically escaped to prevent <b>HTML injection</b>!");
+$entities = Entities::fromHtml($generic);
+
+$sm($entities->message, entities: $entities->entities);
+
+// See https://github.com/danog/telegram-entities for the full list of available methods!
 ```
 
 Many more methods are available, see the [API documentation](https://github.com/danog/telegram-entities/blob/master/docs/docs/index.md) for the full list!

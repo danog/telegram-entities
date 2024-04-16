@@ -53,4 +53,27 @@ $sm($entities->message, entities: $entities->entities);
 $entities = Entities::fromMarkdown("*This is _a ❤️ nested_ test*");
 $sm($entities->message, entities: $entities->entities);
 
+// Escape text using utility methods
+$generic = EntityTools::markdownEscape("Automatically escaped to prevent *markdown injection*!");
+$link = EntityTools::markdownUrlEscape("https://google.com");
+$code = EntityTools::markdownCodeEscape("test with autoescaped ` test");
+$codeBlock = EntityTools::markdownCodeblockEscape("<?php echo 'test with autoescaped ``` test';");
+
+$entities = Entities::fromMarkdown("This is _a ❤️ [nested]($link)_ `$code`
+
+```php
+$codeBlock
+```
+
+$generic
+");
+
+$sm($entities->message, entities: $entities->entities);
+
+// Escape text for the HTML parser!
+$generic = EntityTools::htmlEscape("Automatically escaped to prevent <b>HTML injection</b>!");
+$entities = Entities::fromHtml($generic);
+
+$sm($entities->message, entities: $entities->entities);
+
 // See https://github.com/danog/telegram-entities for the full list of available methods!
