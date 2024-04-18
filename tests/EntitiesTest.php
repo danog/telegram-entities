@@ -139,7 +139,7 @@ class EntitiesTest extends TestCase
             $this->assertEquals($html, $result->message);
             $this->assertNoRelevantEntities($result->entities);
 
-            $result = self::render(message: "```\n".EntityTools::markdownCodeblockEscape($html)."\n```", parse_mode: $mode);
+            $result = self::render(message: "```\n".EntityTools::markdownCodeEscape($html)."\n```", parse_mode: $mode);
             $this->assertEquals($html, \rtrim($result->message));
             $this->assertEquals([['offset' => 0, 'length' => EntityTools::mbStrlen($html), 'language' => '', 'type' => 'pre']], $result->entities);
         }
@@ -428,7 +428,7 @@ class EntitiesTest extends TestCase
             ],
             [
                 'markdown',
-                "```\na_b\n".EntityTools::markdownCodeblockEscape('\\ ```').'```',
+                "```\na_b\n".EntityTools::markdownCodeEscape('\\ ```').'```',
                 "a_b\n\\ ```",
                 [
                     [
