@@ -370,7 +370,7 @@ final class Entities
         foreach ($this->entities as $entity) {
             ['offset' => $offset, 'length' => $length] = $entity;
             $insertions[$offset] ??= '';
-            /** @psalm-suppress PossiblyUndefinedArrayOffset */
+            /** @psalm-suppress PossiblyUndefinedArrayOffset, DocblockTypeContradiction */
             $insertions[$offset] .= match ($entity['type']) {
                 'bold' => '<b>',
                 'italic' => '<i>',
@@ -390,6 +390,7 @@ final class Entities
                 default => '',
             };
             $offset += $length;
+            /** @psalm-suppress DocblockTypeContradiction */
             $insertions[$offset] = match ($entity['type']) {
                 "bold" => '</b>',
                 "italic" => '</i>',
