@@ -387,6 +387,7 @@ final class Entities
                 "spoiler" => $allowTelegramTags ? '<tg-spoiler>' : '',
                 "custom_emoji" => $allowTelegramTags ? '<tg-emoji emoji-id="'.$entity['custom_emoji_id'].'">' : '',
                 "text_mention" => $allowTelegramTags ? '<a href="tg://user?id='.$entity['user']['id'].'">' : '',
+                default => '',
             };
             $offset += $length;
             $insertions[$offset] = match ($entity['type']) {
@@ -401,6 +402,7 @@ final class Entities
                 "spoiler" => $allowTelegramTags ? '</tg-spoiler>' : '',
                 "custom_emoji" => $allowTelegramTags ? "</tg-emoji>" : '',
                 "text_mention" => $allowTelegramTags ? '</a>' : '',
+                default => '',
             } . ($insertions[$offset] ?? '');
         }
         \ksort($insertions);

@@ -10,6 +10,7 @@ use Amp\Http\Client\Request;
 use AssertionError;
 use danog\TelegramEntities\Entities;
 use danog\TelegramEntities\EntityTools;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /** @internal */
@@ -78,6 +79,241 @@ class EntitiesTest extends TestCase
         $test = Entities::fromMarkdown('|');
         $this->assertEmpty($test->entities);
         $this->assertSame('|', $test->message);
+    }
+
+    #[DataProvider('provideHtmlEntities')]
+    public function testToHtml(string $message, string $htmlTg, string $htmlNoTg, array $entities): void
+    {
+        $e = new Entities($message, $entities);
+        $this->assertEquals($htmlTg, $e->toHTML(true));
+        $this->assertEquals($htmlNoTg, $e->toHTML(false));
+        $this->assertEquals($htmlNoTg, $e->toHTML());
+    }
+    public static function provideHtmlEntities(): iterable
+    {
+        yield [
+            'test',
+            'test',
+            'test',
+            [[
+                'type' => 'bank_card',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+        yield [
+            'test',
+            '<blockquote>test</blockquote>',
+            '<blockquote>test</blockquote>',
+            [[
+                'type' => 'block_quote',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+        yield [
+            'test',
+            '<b>test</b>',
+            '<b>test</b>',
+            [[
+                'type' => 'bold',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+        yield [
+            'test',
+            '<b>t<i>es</i>t</b>',
+            '<b>t<i>es</i>t</b>',
+            [[
+                'type' => 'bold',
+                'offset' => 0,
+                'length' => 4,
+            ], [
+                'type' => 'italic',
+                'offset' => 1,
+                'length' => 2,
+            ]]
+        ];
+        yield [
+            'test',
+            'test',
+            'test',
+            [[
+                'type' => 'bot_command',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            'test',
+            'test',
+            [[
+                'type' => 'cashtag',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<code>test</code>',
+            '<code>test</code>',
+            [[
+                'type' => 'code',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<tg-emoji emoji-id="12345">test</tg-emoji>',
+            'test',
+            [[
+                'type' => 'custom_emoji',
+                'offset' => 0,
+                'length' => 4,
+                'custom_emoji_id' => 12345,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<a href="mailto:test">test</a>',
+            '<a href="mailto:test">test</a>',
+            [[
+                'type' => 'email',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            'test',
+            'test',
+            [[
+                'type' => 'hashtag',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<i>test</i>',
+            '<i>test</i>',
+            [[
+                'type' => 'italic',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<a href="tg://user?id=12345">test</a>',
+            'test',
+            [[
+                'type' => 'text_mention',
+                'offset' => 0,
+                'length' => 4,
+                'user' => ['id' => 12345]
+            ]]
+        ];
+
+        yield [
+            '@test',
+            '<a href="https://t.me/test">@test</a>',
+            '<a href="https://t.me/test">@test</a>',
+            [[
+                'type' => 'mention',
+                'offset' => 0,
+                'length' => 5,
+            ]]
+        ];
+
+        yield [
+            'test',
+            'test',
+            'test',
+            [[
+                'type' => 'phone_number',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<pre language="language">test</pre>',
+            '<pre language="language">test</pre>',
+            [[
+                'type' => 'pre',
+                'offset' => 0,
+                'length' => 4,
+                'language' => 'language',
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<tg-spoiler>test</tg-spoiler>',
+            'test',
+            [[
+                'type' => 'spoiler',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<s>test</s>',
+            '<s>test</s>',
+            [[
+                'type' => 'strikethrough',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<a href="https://google.com">test</a>',
+            '<a href="https://google.com">test</a>',
+            [[
+                'type' => 'text_link',
+                'offset' => 0,
+                'length' => 4,
+                'url' => 'https://google.com',
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<u>test</u>',
+            '<u>test</u>',
+            [[
+                'type' => 'underline',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
+
+        yield [
+            'test',
+            '<a href="test">test</a>',
+            '<a href="test">test</a>',
+            [[
+                'type' => 'url',
+                'offset' => 0,
+                'length' => 4,
+            ]]
+        ];
     }
     private function testEntitiesInner(string $mode, string $html, string $bare, array $entities, ?string $htmlReverse = null): void
     {
