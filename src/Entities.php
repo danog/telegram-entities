@@ -70,7 +70,7 @@ final class Entities
      */
     public static function fromMarkdown(string $markdown): self
     {
-        $markdown = \str_replace("\r\n", "\n", $markdown);
+        $markdown = \trim(\str_replace("\r\n", "\n", $markdown));
         $message = '';
         $messageLen = 0;
         $entities = [];
