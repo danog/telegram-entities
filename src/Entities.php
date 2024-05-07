@@ -376,7 +376,7 @@ final class Entities
                 'italic' => '<i>',
                 'code' => '<code>',
                 'pre' => isset($entity['language']) && $entity['language'] !== '' ? '<pre language="'.$entity['language'].'">' : '<pre>',
-                'text_link' => '<a href="'.$entity['url'].'">',
+                'text_link' => '<a href="'.EntityTools::htmlEscape($entity['url']).'">',
                 'strikethrough' => '<s>',
                 "underline" => '<u>',
                 "block_quote" => '<blockquote>',

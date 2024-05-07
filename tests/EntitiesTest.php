@@ -295,6 +295,18 @@ class EntitiesTest extends TestCase
 
         yield [
             'test',
+            '<a href="https://google.com/?arg=a&amp;arg2=b">test</a>',
+            '<a href="https://google.com/?arg=a&amp;arg2=b">test</a>',
+            [[
+                'type' => 'text_link',
+                'offset' => 0,
+                'length' => 4,
+                'url' => 'https://google.com/?arg=a&arg2=b',
+            ]]
+        ];
+
+        yield [
+            'test',
             '<u>test</u>',
             '<u>test</u>',
             [[
@@ -787,17 +799,17 @@ class EntitiesTest extends TestCase
             ],
             [
                 'html',
-                '<a href="https://google.com/">link </a>',
+                '<a href="https://google.com/?a=a&amp;b=b">link </a>',
                 'link',
                 [
                     [
                         'offset' => 0,
                         'length' => 4,
                         'type' => 'text_link',
-                        'url' => 'https://google.com/',
+                        'url' => 'https://google.com/?a=a&b=b',
                     ],
                 ],
-                '<a href="https://google.com/">link</a> ',
+                '<a href="https://google.com/?a=a&amp;b=b">link</a> ',
             ],
             [
                 'markdown',
