@@ -83,9 +83,9 @@ $codeBlock = EntityTools::markdownCodeblockEscape("<?php echo 'test with autoesc
 
 $entities = Entities::fromMarkdown("This is _a ❤️ [nested]($link)_ `$code`
 
-```php
+\```php
 $codeBlock
-```
+\```
 
 $generic
 ");
