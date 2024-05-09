@@ -262,7 +262,7 @@ class EntitiesTest extends TestCase
         yield [
             'test',
             '<tg-spoiler>test</tg-spoiler>',
-            'test',
+            '<span class="tg-spoiler">test</span>',
             [[
                 'type' => 'spoiler',
                 'offset' => 0,
@@ -617,6 +617,19 @@ class EntitiesTest extends TestCase
                     ],
                 ],
                 '<b>&apos;&quot;</b>',
+            ],
+            [
+                'html',
+                '<span class="tg-spoiler">spoiler</span>',
+                'spoiler',
+                [
+                    [
+                        'offset' => 0,
+                        'length' => 7,
+                        'type' => 'spoiler',
+                    ],
+                ],
+                '<tg-spoiler>spoiler</tg-spoiler>',
             ],
             [
                 'html',

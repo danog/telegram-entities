@@ -316,6 +316,9 @@ final class Entities
             'pre' => $node->hasAttribute('language')
                 ? ['type' => 'pre', 'language' => $node->getAttribute('language')]
                 : ['type' => 'pre'],
+            'span' => $node->hasAttribute('class') && $node->getAttribute('class') === 'tg-spoiler'
+                    ? ['type' => 'spoiler']
+                    : null,
             'tg-emoji' => ['type' => 'custom_emoji', 'custom_emoji_id' => (int) $node->getAttribute('emoji-id')],
             'emoji' => ['type' => 'custom_emoji', 'custom_emoji_id' => (int) $node->getAttribute('id')],
             'a' => self::handleLink($node->getAttribute('href')),
@@ -384,7 +387,7 @@ final class Entities
                 "email" => '<a href="mailto:'.EntityTools::htmlEscape(EntityTools::mbSubstr($this->message, $offset, $length)).'">',
                 "phone" => '<a href="phone:'.EntityTools::htmlEscape(EntityTools::mbSubstr($this->message, $offset, $length)).'">',
                 "mention" => '<a href="https://t.me/'.EntityTools::htmlEscape(EntityTools::mbSubstr($this->message, $offset+1, $length-1)).'">',
-                "spoiler" => $allowTelegramTags ? '<tg-spoiler>' : '',
+                "spoiler" => $allowTelegramTags ? '<tg-spoiler>' : '<span class="tg-spoiler">',
                 "custom_emoji" => $allowTelegramTags ? '<tg-emoji emoji-id="'.$entity['custom_emoji_id'].'">' : '',
                 "text_mention" => $allowTelegramTags ? '<a href="tg://user?id='.$entity['user']['id'].'">' : '',
                 default => '',
@@ -400,7 +403,7 @@ final class Entities
                 "strikethrough" => '</s>',
                 "underline" => '</u>',
                 "block_quote" => '</blockquote>',
-                "spoiler" => $allowTelegramTags ? '</tg-spoiler>' : '',
+                "spoiler" => $allowTelegramTags ? '</tg-spoiler>' : '</span>',
                 "custom_emoji" => $allowTelegramTags ? "</tg-emoji>" : '',
                 "text_mention" => $allowTelegramTags ? '</a>' : '',
                 default => '',
