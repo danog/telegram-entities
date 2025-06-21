@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /**
  * Tools module.
@@ -64,6 +62,7 @@ final class EntityTools
         }
         return $length;
     }
+
     /**
      * Telegram UTF-16 multibyte substring.
      *
@@ -86,6 +85,7 @@ final class EntityTools
             'UTF-16',
         );
     }
+
     /**
      * Telegram UTF-16 multibyte split.
      *
@@ -107,6 +107,38 @@ final class EntityTools
         /** @var list<string> */
         return $result;
     }
+
+    /**
+     * Telegram UTF-16 multibyte subreplace.
+     *
+     * @param string   $string  Text
+     * @param string   $replace Replacement
+     * @param integer  $offset  Offset
+     * @param null|int $length  Length
+     * @return string|list<string> The result string is returned. If string is an array then array is returned.
+     */
+    public static function mbSubstrReplace(
+        array|string   $string,
+        array|string   $replace,
+        array|int      $offset,
+        array|int|null $length = null
+    ): array|string
+    {
+        /** @var string */
+        $string  = \mb_convert_encoding($string, 'UTF-16');
+        $replace = \mb_convert_encoding($replace, 'UTF-16');
+        /** @var string */
+        return \mb_convert_encoding(
+            \substr_replace(
+                $string, $replace,
+                $offset << 1,
+                $length === null ? null : ($length << 1),
+            ),
+            'UTF-8',
+            'UTF-16',
+        );
+    }
+
     /**
      * Escape string for this library's HTML entity converter.
      *
@@ -116,6 +148,7 @@ final class EntityTools
     {
         return \htmlspecialchars($what, ENT_QUOTES|ENT_SUBSTITUTE|ENT_XML1);
     }
+
     /**
      * Escape string for markdown.
      *
@@ -169,6 +202,7 @@ final class EntityTools
             $what
         );
     }
+
     /**
      * Escape string for markdown codeblock.
      *
@@ -178,6 +212,7 @@ final class EntityTools
     {
         return \str_replace('```', '\\```', $what);
     }
+
     /**
      * Escape string for markdown code section.
      *
@@ -187,6 +222,7 @@ final class EntityTools
     {
         return \str_replace('`', '\\`', $what);
     }
+
     /**
      * Escape string for URL.
      *
