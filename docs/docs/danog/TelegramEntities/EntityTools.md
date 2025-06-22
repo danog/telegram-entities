@@ -18,6 +18,7 @@ Telegram UTF-16 styled text entity tools.
 * [`mbStrlen(string $text): int`](#mbStrlen)
 * [`mbSubstr(string $text, integer $offset, (null|int) $length = NULL): string`](#mbSubstr)
 * [`mbStrSplit(string $text, integer<0, max> $length): list<string>`](#mbStrSplit)
+* [`mbSubstrReplace(string $string, string $replace, integer $offset, (null|int) $length = NULL): string`](#mbSubstrReplace)
 * [`htmlEscape(string $what): string`](#htmlEscape)
 * [`markdownEscape(string $what): string`](#markdownEscape)
 * [`markdownCodeblockEscape(string $what): string`](#markdownCodeblockEscape)
@@ -64,6 +65,22 @@ Parameters:
 * `max`
 
 
+
+
+### <a name="mbSubstrReplace"></a> `mbSubstrReplace(string $string, string $replace, integer $offset, (null|int) $length = NULL): string`
+
+Telegram UTF-16 multibyte subreplace.
+
+
+Parameters:
+
+* `$string`: `string` Text  
+* `$replace`: `string` Replacement  
+* `$offset`: `integer` Offset  
+* `$length`: `(null|int)` Length  
+
+
+Return value: The result string is returned. If string is an array then array is returned.
 
 
 ### <a name="htmlEscape"></a> `htmlEscape(string $what): string`

@@ -115,22 +115,22 @@ final class EntityTools
      * @param string   $replace Replacement
      * @param integer  $offset  Offset
      * @param null|int $length  Length
-     * @return string|list<string> The result string is returned. If string is an array then array is returned.
+     * @return string The result string is returned. If string is an array then array is returned.
      */
     public static function mbSubstrReplace(
-        array|string   $string,
-        array|string   $replace,
-        array|int      $offset,
-        array|int|null $length = null
-    ): array|string
-    {
+        string   $string,
+        string   $replace,
+        int      $offset,
+        int|null $length = null
+    ): string {
         /** @var string */
         $string  = \mb_convert_encoding($string, 'UTF-16');
         $replace = \mb_convert_encoding($replace, 'UTF-16');
         /** @var string */
         return \mb_convert_encoding(
             \substr_replace(
-                $string, $replace,
+                $string,
+                $replace,
                 $offset << 1,
                 $length === null ? null : ($length << 1),
             ),
