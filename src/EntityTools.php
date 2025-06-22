@@ -125,6 +125,7 @@ final class EntityTools
     ): string {
         /** @var string */
         $string  = \mb_convert_encoding($string, 'UTF-16');
+        /** @var string */
         $replace = \mb_convert_encoding($replace, 'UTF-16');
         /** @var string */
         return \mb_convert_encoding(
