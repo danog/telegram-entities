@@ -36,7 +36,7 @@ use DOMText;
  *
  * @psalm-type TEntity=(
  *      array{
- *          type: "bold"|"italic"|"code"|"strikethrough"|"underline"|"block_quote"|"url"|"email"|"phone"|"spoiler"|"mention",
+ *          type: "bold"|"italic"|"code"|"strikethrough"|"underline"|"blockquote"|"url"|"email"|"phone"|"spoiler"|"mention",
  *          offset: int<0, max>,
  *          length: int<0, max>
  *      }
@@ -308,7 +308,7 @@ final class Entities
         $entity = match ($node->nodeName) {
             's', 'strike', 'del' => ['type' => 'strikethrough'],
             'u' =>  ['type' => 'underline'],
-            'blockquote' => ['type' => 'block_quote'],
+            'blockquote' => ['type' => 'blockquote'],
             'b', 'strong' => ['type' => 'bold'],
             'i', 'em' => ['type' => 'italic'],
             'code' => ['type' => 'code'],
@@ -382,7 +382,7 @@ final class Entities
                 'text_link' => '<a href="'.EntityTools::htmlEscape($entity['url']).'">',
                 'strikethrough' => '<s>',
                 "underline" => '<u>',
-                "block_quote" => '<blockquote>',
+                "blockquote" => '<blockquote>',
                 "url" => '<a href="'.EntityTools::htmlEscape(EntityTools::mbSubstr($this->message, $offset, $length)).'">',
                 "email" => '<a href="mailto:'.EntityTools::htmlEscape(EntityTools::mbSubstr($this->message, $offset, $length)).'">',
                 "phone" => '<a href="phone:'.EntityTools::htmlEscape(EntityTools::mbSubstr($this->message, $offset, $length)).'">',
@@ -402,7 +402,7 @@ final class Entities
                 "text_link", "url", "email", "mention", "phone" => '</a>',
                 "strikethrough" => '</s>',
                 "underline" => '</u>',
-                "block_quote" => '</blockquote>',
+                "blockquote" => '</blockquote>',
                 "spoiler" => $allowTelegramTags ? '</tg-spoiler>' : '</span>',
                 "custom_emoji" => $allowTelegramTags ? "</tg-emoji>" : '',
                 "text_mention" => $allowTelegramTags ? '</a>' : '',

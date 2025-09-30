@@ -106,7 +106,7 @@ class EntitiesTest extends TestCase
             '<blockquote>test</blockquote>',
             '<blockquote>test</blockquote>',
             [[
-                'type' => 'block_quote',
+                'type' => 'blockquote',
                 'offset' => 0,
                 'length' => 4,
             ]]
@@ -547,7 +547,7 @@ class EntitiesTest extends TestCase
                     [
                         'offset' => 49,
                         'length' => 10,
-                        'type' => 'block_quote',
+                        'type' => 'blockquote',
                     ],
                     [
                         'offset' => 127,
@@ -666,6 +666,18 @@ class EntitiesTest extends TestCase
                         'length' => 8,
                         'type' => 'text_mention',
                         'user' => ['id' => 101374607],
+                    ],
+                ],
+            ],
+            [
+                'html',
+                '<blockquote>blockquote</blockquote>',
+                'blockquote',
+                [
+                    [
+                        'offset' => 0,
+                        'length' => 10,
+                        'type' => 'blockquote',
                     ],
                 ],
             ],
