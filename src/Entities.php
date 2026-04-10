@@ -44,6 +44,7 @@ use DOMText;
  *      |array{type: "custom_emoji", custom_emoji_id: int, offset: int, length: int}
  *      |array{type: "pre", language?: string, offset: int, length: int}
  *      |array{type: "text_link", url: string, offset: int, length: int}
+ *      |array{type: "date_time", unix_time: int, offset: int, length: int}
  * )
  */
 final class Entities
@@ -390,6 +391,7 @@ final class Entities
                 "spoiler" => $allowTelegramTags ? '<tg-spoiler>' : '<span class="tg-spoiler">',
                 "custom_emoji" => $allowTelegramTags ? '<tg-emoji emoji-id="'.$entity['custom_emoji_id'].'">' : '',
                 "text_mention" => $allowTelegramTags ? '<a href="tg://user?id='.$entity['user']['id'].'">' : '',
+                'date_time' => $allowTelegramTags ? "<tg-time unix=\"{$entity['unix_time']}\">" : "<time datetime=\"" . \date('c', $entity['unix_time']) . "\">",
                 default => '',
             };
             $offset += $length;
@@ -406,6 +408,7 @@ final class Entities
                 "spoiler" => $allowTelegramTags ? '</tg-spoiler>' : '</span>',
                 "custom_emoji" => $allowTelegramTags ? "</tg-emoji>" : '',
                 "text_mention" => $allowTelegramTags ? '</a>' : '',
+                "date_time" => $allowTelegramTags ? "</tg-time>" : "</time>",
                 default => '',
             } . ($insertions[$offset] ?? '');
         }
