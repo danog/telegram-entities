@@ -31,6 +31,8 @@ use Webmozart\Assert\Assert;
  * Telegram UTF-16 styled text entity tools.
  *
  * @api
+ *
+ * @psalm-immutable
  */
 final class EntityTools
 {
@@ -39,6 +41,8 @@ final class EntityTools
      * @psalm-suppress UnusedConstructor
      *
      * @internal Can only be used statically.
+     *
+     * @psalm-mutation-free
      */
     private function __construct()
     {
@@ -49,6 +53,8 @@ final class EntityTools
      * Get length of string in UTF-16 code points.
      *
      * @param string $text Text
+     *
+     * @psalm-pure
      */
     public static function mbStrlen(string $text): int
     {
@@ -69,6 +75,8 @@ final class EntityTools
      * @param string   $text   Text to substring
      * @param integer  $offset Offset
      * @param null|int $length Length
+     *
+     * @psalm-pure
      */
     public static function mbSubstr(string $text, int $offset, ?int $length = null): string
     {
@@ -89,9 +97,12 @@ final class EntityTools
     /**
      * Telegram UTF-16 multibyte split.
      *
-     * @param  string $text Text
-     * @param  integer<0, max> $length Length
+     * @param string $text Text
+     * @param integer<0, max> $length Length
+     *
      * @return list<string>
+     *
+     * @psalm-pure
      */
     public static function mbStrSplit(string $text, int $length): array
     {
@@ -115,7 +126,10 @@ final class EntityTools
      * @param string   $replace Replacement
      * @param integer  $offset  Offset
      * @param null|int $length  Length
+     *
      * @return string The result string is returned. If string is an array then array is returned.
+     *
+     * @psalm-pure
      */
     public static function mbSubstrReplace(
         string   $string,
@@ -144,6 +158,8 @@ final class EntityTools
      * Escape string for this library's HTML entity converter.
      *
      * @param string $what String to escape
+     *
+     * @psalm-pure
      */
     public static function htmlEscape(string $what): string
     {
@@ -154,6 +170,8 @@ final class EntityTools
      * Escape string for markdown.
      *
      * @param string $what String to escape
+     *
+     * @psalm-pure
      */
     public static function markdownEscape(string $what): string
     {
@@ -208,6 +226,8 @@ final class EntityTools
      * Escape string for markdown codeblock.
      *
      * @param string $what String to escape
+     *
+     * @psalm-pure
      */
     public static function markdownCodeblockEscape(string $what): string
     {
@@ -218,6 +238,8 @@ final class EntityTools
      * Escape string for markdown code section.
      *
      * @param string $what String to escape
+     *
+     * @psalm-pure
      */
     public static function markdownCodeEscape(string $what): string
     {
@@ -228,6 +250,8 @@ final class EntityTools
      * Escape string for URL.
      *
      * @param string $what String to escape
+     *
+     * @psalm-pure
      */
     public static function markdownUrlEscape(string $what): string
     {

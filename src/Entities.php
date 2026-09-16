@@ -50,6 +50,8 @@ final class Entities
 {
     /**
      * Creates an Entities container using a message and a list of entities.
+     *
+     * @psalm-mutation-free
      */
     public function __construct(
         /** Converted message */
@@ -67,6 +69,8 @@ final class Entities
      * Manually convert markdown to a message and a set of entities.
      *
      * @return Entities Object containing message and entities
+     *
+     * @psalm-pure
      */
     public static function fromMarkdown(string $markdown): self
     {
@@ -287,8 +291,6 @@ final class Entities
     /**
      * @return integer Length of the node
      *
-     * @psalm-suppress UnusedReturnValue
-     *
      * @param-out list<TEntity> $entities
      * @param list<TEntity> $entities
      */
@@ -351,7 +353,11 @@ final class Entities
         }
         return $length;
     }
-    /** @return array{type: "text_mention", user: array{id: int}}|array{type: "custom_emoji", custom_emoji_id: int}|array{type: "text_link", url: string} */
+    /**
+     * @return array{type: "text_mention", user: array{id: int}}|array{type: "custom_emoji", custom_emoji_id: int}|array{type: "text_link", url: string}
+     *
+     * @psalm-pure
+     */
     private static function handleLink(string $href): array
     {
         if (\preg_match('|^mention:(.+)|', $href, $matches) || \preg_match('|^tg://user\\?id=(.+)|', $href, $matches)) {
@@ -366,6 +372,8 @@ final class Entities
      * Convert a message and a set of entities to HTML.
      *
      * @param bool $allowTelegramTags Whether to allow telegram-specific tags like tg-spoiler, tg-emoji, mention links and so on...
+     *
+     * @psalm-mutation-free
      */
     public function toHTML(bool $allowTelegramTags = false): string
     {
