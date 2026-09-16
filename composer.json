@@ -29,7 +29,6 @@
         "phpunit/phpunit": "^11.0.9",
         "amphp/php-cs-fixer-config": "^2.0.1",
         "friendsofphp/php-cs-fixer": "^3.52.1",
-        "infection/infection": "^0.35.4",
         "danog/phpdoc": "^0.1.22",
         "amphp/http-client": "^5.0"
     },
