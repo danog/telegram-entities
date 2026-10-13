@@ -326,6 +326,19 @@ class EntitiesTest extends TestCase
                 'length' => 4,
             ]]
         ];
+
+        yield [
+            '22:45 tomorrow',
+            '<tg-time unix="1775846700">22:45 tomorrow</tg-time>',
+            '<time datetime="2026-04-10T18:45:00+00:00">22:45 tomorrow</time>',
+            [[
+                'type' => 'date_time',
+                'unix_time' => 1775846700,
+                'offset' => 0,
+                'length' => 14,
+            ]]
+        ];
+
     }
     private function testEntitiesInner(string $mode, string $html, string $bare, array $entities, ?string $htmlReverse = null): void
     {
