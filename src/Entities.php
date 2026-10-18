@@ -124,11 +124,15 @@ final class Entities
             if ($char === '>') {
                 $message .= $piece;
                 $messageLen += EntityTools::mbStrlen($piece);
-                if (!$canStartQuote) {
+                if ($canStartQuote && self::hasQuote($stack)) {
+                    // Continuation of the block quotation
+                } elseif ($canStartQuote && !$stack) {
+                    $stack []= ['>', $messageLen];
+                } else {
+                    // Not at the start of a line, or inside another entity (like in *> text*)
                     $message .= $char;
                     $messageLen++;
-                } elseif (!self::hasQuote($stack)) {
-                    $stack []= ['>', $messageLen];
+                    $canStartQuote = false;
                 }
                 continue;
             }
@@ -310,10 +314,33 @@ final class Entities
         if ($stack) {
             throw new AssertionError("Found unclosed markdown elements ".\implode(', ', \array_column($stack, 0)));
         }
-        return new Entities(
-            \trim($message),
-            $entities,
-        );
+        return self::trimmed($message, $entities);
+    }
+
+    /**
+     * Trim whitespace from the start and the end of the message, moving and shortening the entities accordingly.
+     *
+     * @param list<TEntity> $entities
+     *
+     * @psalm-pure
+     */
+    private static function trimmed(string $message, array $entities): self
+    {
+        $trimmed = \trim($message);
+        // The trimmed characters are single bytes, and single UTF-16 code units
+        $leading = \strlen($message) - \strlen(\ltrim($message));
+        $length = EntityTools::mbStrlen($trimmed);
+        $result = [];
+        foreach ($entities as $entity) {
+            $start = \max(0, $entity['offset'] - $leading);
+            $end = \min($length, $entity['offset'] + $entity['length'] - $leading);
+            if ($end > $start) {
+                $entity['offset'] = $start;
+                $entity['length'] = $end - $start;
+                $result []= $entity;
+            }
+        }
+        return new self($trimmed, $result);
     }
 
     /**
@@ -396,8 +423,8 @@ final class Entities
     {
         $dom = new DOMDocument();
         $html = \preg_replace(
-            ['/\<br(\s*)?\/?\>/i', '/\<blockquote\s+expandable\s*\>/i'],
-            ["\n", '<blockquote expandable="">'],
+            ['/\<br(\s*)?\/?\>/i', '/(\<blockquote\b[^>]*?\s)expandable(?=[\s\/>])/i'],
+            ["\n", '$1expandable=""'],
             $html
         );
         \assert($html !== null);
@@ -406,7 +433,7 @@ final class Entities
         $entities = [];
         /** @psalm-suppress PossiblyNullArgument Ignore, will throw anyway */
         self::parseNode($dom->getElementsByTagName('body')->item(0), 0, $message, $entities);
-        return new Entities(\trim($message), $entities);
+        return self::trimmed($message, $entities);
     }
     /**
      * @return integer Length of the node

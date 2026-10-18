@@ -76,6 +76,45 @@ class EntitiesTest extends TestCase
         $this->expectExceptionMessage("Invalid Unix time specified: ");
         Entities::fromMarkdown('![a](tg://time?format=r)');
     }
+    /**
+     * Trimming the message must move the entities.
+     */
+    public function testTrimmedEntities(): void
+    {
+        $test = Entities::fromMarkdown("> *b* c");
+        $this->assertSame('b c', $test->message);
+        $this->assertSame([['type' => 'bold', 'offset' => 0, 'length' => 1], ['type' => 'blockquote', 'offset' => 0, 'length' => 3]], $test->entities);
+
+        $test = Entities::fromMarkdown("\\  x *y*");
+        $this->assertSame('x y', $test->message);
+        $this->assertSame([['type' => 'bold', 'offset' => 2, 'length' => 1]], $test->entities);
+
+        $test = Entities::fromHtml('<b> x</b> y');
+        $this->assertSame('x y', $test->message);
+        $this->assertSame([['type' => 'bold', 'offset' => 0, 'length' => 1]], $test->entities);
+    }
+    /**
+     * > only starts a block quotation at the start of a line, outside of other entities.
+     */
+    public function testGreaterThanInEntities(): void
+    {
+        $test = Entities::fromMarkdown('*> note*');
+        $this->assertSame('> note', $test->message);
+        $this->assertSame([['type' => 'bold', 'offset' => 0, 'length' => 6]], $test->entities);
+
+        $test = Entities::fromMarkdown('[>a](https://example.com)');
+        $this->assertSame('>a', $test->message);
+        $this->assertSame([['type' => 'text_link', 'url' => 'https://example.com', 'offset' => 0, 'length' => 2]], $test->entities);
+
+        $test = Entities::fromMarkdown(">*a\n>b*");
+        $this->assertSame("a\nb", $test->message);
+        $this->assertSame([['type' => 'bold', 'offset' => 0, 'length' => 3], ['type' => 'blockquote', 'offset' => 0, 'length' => 3]], $test->entities);
+    }
+    public function testExpandableAttribute(): void
+    {
+        $test = Entities::fromHtml('<blockquote class="x" expandable>a</blockquote>');
+        $this->assertSame([['type' => 'expandable_blockquote', 'offset' => 0, 'length' => 1]], $test->entities);
+    }
     public function testLiteralGreaterThan(): void
     {
         $test = Entities::fromMarkdown('a > b');
