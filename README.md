@@ -101,6 +101,16 @@ $sm($entities->message, entities: $entities->entities);
 // See https://github.com/danog/telegram-entities for the full list of available methods!
 ```
 
+## Supported syntax
+
+Entities use the type names and fields of the Bot API [MessageEntity](https://core.telegram.org/bots/api#messageentity) type.
+
+The HTML parser supports the [Bot API HTML syntax](https://core.telegram.org/bots/api#html-style): `<b>`/`<strong>`, `<i>`/`<em>`, `<u>`/`<ins>`, `<s>`/`<strike>`/`<del>`, `<tg-spoiler>`/`<span class="tg-spoiler">`, `<a href="...">` (including `tg://user?id=` mentions), `<tg-emoji emoji-id="...">`, `<tg-time unix="..." format="...">`, `<code>`, `<pre>`, `<pre><code class="language-...">`, `<blockquote>` and `<blockquote expandable>`.
+
+The markdown parser supports the [Bot API MarkdownV2 syntax](https://core.telegram.org/bots/api#markdownv2-style) (but doesn't require escaping of characters that can't start an entity): `*bold*`, `_italic_`, `__underline__`, `~strikethrough~`, `||spoiler||`, `[links](https://...)`, `[mentions](tg://user?id=...)`, `![👍](tg://emoji?id=...)`, `![22:45 tomorrow](tg://time?unix=1647531900&format=wDT)`, `` `code` ``, ```` ```language ```` blocks, `>block quotations` and expandable block quotations (a block quotation ending with `||`).
+
+`toHTML(true)` generates HTML that can be sent with the Bot API's HTML parse mode.
+
 Many more methods are available, see the [API documentation](https://github.com/danog/telegram-entities/blob/master/docs/docs/index.md) for the full list!
 
 ## API Documentation

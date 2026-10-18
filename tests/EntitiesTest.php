@@ -61,6 +61,27 @@ class EntitiesTest extends TestCase
         $this->expectExceptionMessage("Unclosed ) opened @ pos 7!");
         Entities::fromMarkdown('[test](https://google.com');
     }
+    public function testUnclosedQuoteEntity(): void
+    {
+        $this->expectExceptionMessage("Found unclosed markdown element * at the end of a block quotation");
+        Entities::fromMarkdown(">*quote\nnot");
+    }
+    public function testInvalidDateTimeFormat(): void
+    {
+        $this->expectExceptionMessage("Invalid date-time format specified: x");
+        Entities::fromHtml('<tg-time unix="1" format="x">a</tg-time>');
+    }
+    public function testInvalidUnixTime(): void
+    {
+        $this->expectExceptionMessage("Invalid Unix time specified: ");
+        Entities::fromMarkdown('![a](tg://time?format=r)');
+    }
+    public function testLiteralGreaterThan(): void
+    {
+        $test = Entities::fromMarkdown('a > b');
+        $this->assertEmpty($test->entities);
+        $this->assertSame('a > b', $test->message);
+    }
     public function testUnclosedCode(): void
     {
         $this->expectExceptionMessage('Unclosed ``` opened @ pos 3!');
@@ -106,7 +127,7 @@ class EntitiesTest extends TestCase
             '<blockquote>test</blockquote>',
             '<blockquote>test</blockquote>',
             [[
-                'type' => 'block_quote',
+                'type' => 'blockquote',
                 'offset' => 0,
                 'length' => 4,
             ]]
@@ -238,8 +259,8 @@ class EntitiesTest extends TestCase
 
         yield [
             'test',
-            'test',
-            'test',
+            '<a href="tel:test">test</a>',
+            '<a href="tel:test">test</a>',
             [[
                 'type' => 'phone_number',
                 'offset' => 0,
@@ -249,7 +270,7 @@ class EntitiesTest extends TestCase
 
         yield [
             'test',
-            '<pre language="language">test</pre>',
+            '<pre><code class="language-language">test</code></pre>',
             '<pre language="language">test</pre>',
             [[
                 'type' => 'pre',
@@ -342,12 +363,8 @@ class EntitiesTest extends TestCase
         ) {
             $token = \getenv("TOKEN");
             $dest = \getenv("DEST");
-            if (!$token) {
-                throw new AssertionError("A TOKEN environment variable must be defined to run the tests!");
-            }
-            if (!$dest) {
-                throw new AssertionError("A DEST environment variable must be defined to run the tests!");
-            }
+        }
+        if (isset($token, $dest) && $token && $dest) {
             $resultApi = \json_decode(self::$client->request(new Request(
                 "https://api.telegram.org/bot{$token}/sendMessage?".\http_build_query([
                     'chat_id'=> $dest,
@@ -363,15 +380,22 @@ class EntitiesTest extends TestCase
                 throw new AssertionError(\json_encode($resultApi));
             }
 
-            $entities = $resultApi['result']['entities'] ?? [];
-            $entities = \array_map(function (array $e): array {
+            $entitiesApi = $resultApi['result']['entities'] ?? [];
+            $entitiesApi = \array_map(function (array $e): array {
                 if (isset($e['user'])) {
                     $e['user'] = ['id' => $e['user']['id']];
                 }
+                if (isset($e['custom_emoji_id'])) {
+                    $e['custom_emoji_id'] = (int) $e['custom_emoji_id'];
+                }
                 return $e;
-            }, $entities);
+            }, $entitiesApi);
             $this->assertEquals($bare, $resultApi['result']['text']);
-            $this->assertEquals($entities, $entities);
+            $this->assertEquals(self::sortEntities($entities), self::sortEntities(\array_values(\array_filter(
+                $entitiesApi,
+                // Entities detected by the server
+                static fn (array $e): bool => !\in_array($e['type'], ['url', 'email', 'phone_number', 'mention', 'bot_command', 'hashtag', 'cashtag', 'bank_card_number'], true)
+            ))));
         }
 
         if (\strtolower($mode) === 'html') {
@@ -391,6 +415,12 @@ class EntitiesTest extends TestCase
             $this->assertEquals($html, \rtrim($result->message));
             $this->assertEquals([['offset' => 0, 'length' => EntityTools::mbStrlen($html), 'language' => '', 'type' => 'pre']], $result->entities);
         }
+    }
+
+    private static function sortEntities(array $entities): array
+    {
+        \usort($entities, static fn (array $a, array $b): int => [$a['offset'], -$a['length'], $a['type']] <=> [$b['offset'], -$b['length'], $b['type']]);
+        return $entities;
     }
 
     private function assertNoRelevantEntities(array $entities): void
@@ -504,7 +534,7 @@ class EntitiesTest extends TestCase
             ],
             [
                 'html',
-                '<b>test</b><br><i>test</i> <code>test</code> <pre language="html">test</pre> <a href="https://example.com/">test</a> <s>strikethrough</s> <u>underline</u> <blockquote>blockquote</blockquote> https://google.com daniil@daniil.it +39398172758722 @daniilgentili <tg-spoiler>spoiler</tg-spoiler> &lt;b&gt;not_bold&lt;/b&gt;',
+                '<b>test</b><br><i>test</i> <code>test</code> <pre><code class="language-html">test</code></pre> <a href="https://example.com/">test</a> <s>strikethrough</s> <u>underline</u> <blockquote>blockquote</blockquote> https://google.com daniil@daniil.it +39398172758722 @daniilgentili <tg-spoiler>spoiler</tg-spoiler> &lt;b&gt;not_bold&lt;/b&gt;',
                 "test\ntest test test test strikethrough underline blockquote https://google.com daniil@daniil.it +39398172758722 @daniilgentili spoiler <b>not_bold</b>",
                 [
                     [
@@ -547,7 +577,7 @@ class EntitiesTest extends TestCase
                     [
                         'offset' => 49,
                         'length' => 10,
-                        'type' => 'block_quote',
+                        'type' => 'blockquote',
                     ],
                     [
                         'offset' => 127,
@@ -555,7 +585,7 @@ class EntitiesTest extends TestCase
                         'type' => 'spoiler',
                     ],
                 ],
-                '<b>test</b><br><i>test</i> <code>test</code> <pre language="html">test</pre> <a href="https://example.com/">test</a> <s>strikethrough</s> <u>underline</u> <blockquote>blockquote</blockquote> https://google.com daniil@daniil.it +39398172758722 @daniilgentili <tg-spoiler>spoiler</tg-spoiler> &lt;b&gt;not_bold&lt;/b&gt;',
+                '<b>test</b><br><i>test</i> <code>test</code> <pre><code class="language-html">test</code></pre> <a href="https://example.com/">test</a> <s>strikethrough</s> <u>underline</u> <blockquote>blockquote</blockquote> https://google.com daniil@daniil.it +39398172758722 @daniilgentili <tg-spoiler>spoiler</tg-spoiler> &lt;b&gt;not_bold&lt;/b&gt;',
             ],
             [
                 'markdown',
@@ -893,6 +923,99 @@ class EntitiesTest extends TestCase
                     ],
                 ],
                 '`\`\``',
+            ],
+            [
+                'html',
+                'a<blockquote expandable>quote</blockquote>',
+                'aquote',
+                [['offset' => 1, 'length' => 5, 'type' => 'expandable_blockquote']],
+            ],
+            [
+                'html',
+                'a<blockquote>quote</blockquote>',
+                'aquote',
+                [['offset' => 1, 'length' => 5, 'type' => 'blockquote']],
+            ],
+            [
+                'html',
+                'Meet <tg-time unix="1647531900" format="wDT">22:45 tomorrow</tg-time>',
+                'Meet 22:45 tomorrow',
+                [['offset' => 5, 'length' => 14, 'type' => 'date_time', 'unix_time' => 1647531900, 'date_time_format' => 'wDT']],
+            ],
+            [
+                'html',
+                'Meet <tg-time unix="1647531900" format="Tdw">22:45 tomorrow</tg-time>',
+                'Meet 22:45 tomorrow',
+                [['offset' => 5, 'length' => 14, 'type' => 'date_time', 'unix_time' => 1647531900, 'date_time_format' => 'wdT']],
+                'Meet <tg-time unix="1647531900" format="wdT">22:45 tomorrow</tg-time>',
+            ],
+            [
+                'html',
+                'Meet <tg-time unix="1647531900" format="r">soon</tg-time>',
+                'Meet soon',
+                [['offset' => 5, 'length' => 4, 'type' => 'date_time', 'unix_time' => 1647531900, 'date_time_format' => 'r']],
+            ],
+            [
+                'html',
+                'Meet <tg-time unix="1647531900">then</tg-time>',
+                'Meet then',
+                [['offset' => 5, 'length' => 4, 'type' => 'date_time', 'unix_time' => 1647531900, 'date_time_format' => '']],
+            ],
+            [
+                'html',
+                'a<ins>underline</ins>',
+                'aunderline',
+                [['offset' => 1, 'length' => 9, 'type' => 'underline']],
+                'a<u>underline</u>',
+            ],
+            [
+                'html',
+                '<pre><code class="language-php">echo 1;</code></pre>',
+                'echo 1;',
+                [['offset' => 0, 'length' => 7, 'type' => 'pre', 'language' => 'php']],
+            ],
+            [
+                'html',
+                'a<code class="language-php">echo 1;</code>',
+                'aecho 1;',
+                [['offset' => 1, 'length' => 7, 'type' => 'code']],
+                'a<code>echo 1;</code>',
+            ],
+            [
+                'markdown',
+                ">quote\n>line *2*\nnot quoted",
+                "quote\nline 2\nnot quoted",
+                [
+                    ['offset' => 11, 'length' => 1, 'type' => 'bold'],
+                    ['offset' => 0, 'length' => 12, 'type' => 'blockquote'],
+                ],
+            ],
+            [
+                'markdown',
+                "text\n**>quote\n>line 2||\nnot quoted",
+                "text\nquote\nline 2\nnot quoted",
+                [['offset' => 5, 'length' => 12, 'type' => 'expandable_blockquote']],
+            ],
+            [
+                'markdown',
+                ">quote||",
+                "quote",
+                [['offset' => 0, 'length' => 5, 'type' => 'expandable_blockquote']],
+            ],
+            [
+                'markdown',
+                ">quote ||spoiler||",
+                "quote spoiler",
+                [
+                    ['offset' => 6, 'length' => 7, 'type' => 'spoiler'],
+                    ['offset' => 0, 'length' => 13, 'type' => 'blockquote'],
+                ],
+            ],
+            [
+                'markdown',
+                'Meet ![22:45 tomorrow](tg://time?unix=1647531900&format=wDT)',
+                'Meet 22:45 tomorrow',
+                [['offset' => 5, 'length' => 14, 'type' => 'date_time', 'unix_time' => 1647531900, 'date_time_format' => 'wDT']],
             ],
         ];
     }
