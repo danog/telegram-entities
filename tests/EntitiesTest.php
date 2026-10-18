@@ -11,6 +11,7 @@ use AssertionError;
 use danog\TelegramEntities\Entities;
 use danog\TelegramEntities\EntityTools;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 /** @internal */
@@ -47,9 +48,16 @@ class EntitiesTest extends TestCase
     }
     public function testEntities(): void
     {
+        // Report every failing case at once, the Bot API cross-check can only be run in CI
+        $failures = [];
         foreach ($this->provideEntities() as $params) {
-            $this->testEntitiesInner(...$params);
+            try {
+                $this->testEntitiesInner(...$params);
+            } catch (ExpectationFailedException $e) {
+                $failures[] = $params[0].' '.\json_encode($params[1], JSON_UNESCAPED_UNICODE).': '.$e->getMessage()."\n".$e->getComparisonFailure()?->getDiff();
+            }
         }
+        $this->assertSame([], $failures, \implode("\n\n", $failures));
     }
     public function testUnclosed(): void
     {
