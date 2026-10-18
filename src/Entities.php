@@ -108,16 +108,15 @@ final class Entities
             $char = $markdown[$offset++];
             $next = $markdown[$offset] ?? '';
             if ($char === "\n") {
-                $message .= $piece;
-                $messageLen += EntityTools::mbStrlen($piece);
+                $message .= $piece."\n";
+                $messageLen += EntityTools::mbStrlen($piece) + 1;
                 if ($stack && $next !== '>' && self::hasQuote($stack)) {
-                    [$stack, $quote] = self::closeQuote($stack, $message, $messageLen, \substr($markdown, $offset-3, 2) === '||');
+                    // The quotation includes the newline, like in the Bot API
+                    [$stack, $quote] = self::closeQuote($stack, $messageLen - 1, $messageLen, \substr($markdown, $offset-3, 2) === '||');
                     if ($quote !== null) {
                         $entities []= $quote;
                     }
                 }
-                $message .= "\n";
-                $messageLen++;
                 $canStartQuote = true;
                 continue;
             }
@@ -261,19 +260,20 @@ final class Entities
             if ($stack && \end($stack)[0] === $char) {
                 [, $start] = \array_pop($stack);
                 if ($char === '](') {
-                    $posClose = $offset;
                     $link = '';
-                    while (($posClose = \strpos($markdown, ')', $posClose)) !== false) {
-                        if ($markdown[$posClose-1] === '\\') {
-                            $link .= \substr($markdown, $offset, ($posClose-$offset)-1);
-                            $offset = $posClose++;
+                    $posClose = $offset;
+                    $length = \strlen($markdown);
+                    while ($posClose < $length && $markdown[$posClose] !== ')') {
+                        $c = $markdown[$posClose];
+                        if ($c === '\\' && $posClose + 1 < $length && \ord($markdown[$posClose + 1]) >= 1 && \ord($markdown[$posClose + 1]) <= 126) {
+                            $link .= $markdown[$posClose + 1];
+                            $posClose += 2;
                             continue;
                         }
-                        $link .= \substr($markdown, $offset, ($posClose-$offset));
-                        break;
+                        $link .= $c;
+                        $posClose++;
                     }
-                    /** @var int|false $posClose */
-                    if ($posClose === false) {
+                    if ($posClose >= $length) {
                         throw new AssertionError("Unclosed ) opened @ pos $offset!");
                     }
                     $entity = self::handleLink($link);
@@ -295,7 +295,7 @@ final class Entities
                     $canStartQuote = false;
                 }
 
-                $lengthReal = self::trimmedLength($message, $messageLen-$start);
+                $lengthReal = $messageLen-$start;
                 if ($lengthReal > 0) {
                     $entities []= $entity + ['offset' => $start, 'length' => $lengthReal];
                 }
@@ -306,7 +306,7 @@ final class Entities
             }
         }
         if ($stack && self::hasQuote($stack)) {
-            [$stack, $quote] = self::closeQuote($stack, $message, $messageLen, \str_ends_with($markdown, '||'));
+            [$stack, $quote] = self::closeQuote($stack, $messageLen, $messageLen, \str_ends_with($markdown, '||'));
             if ($quote !== null) {
                 $entities []= $quote;
             }
@@ -362,17 +362,19 @@ final class Entities
      * Close the block quotation at the end of the current line.
      *
      * @param non-empty-list<array{0: string, 1: int}> $stack
+     * @param int $lineEnd End of the last line of the quotation, before the newline
+     * @param int $end End of the quotation
      * @param bool $endsWithSpoilerMarker Whether the line ends with ||, which makes the quotation expandable
      *
      * @return array{0: list<array{0: string, 1: int}>, 1: ?array{type: "blockquote"|"expandable_blockquote", offset: int<0, max>, length: int<0, max>}} New stack and quotation entity, if not empty
      *
      * @psalm-pure
      */
-    private static function closeQuote(array $stack, string $message, int $messageLen, bool $endsWithSpoilerMarker): array
+    private static function closeQuote(array $stack, int $lineEnd, int $end, bool $endsWithSpoilerMarker): array
     {
         $type = 'blockquote';
         $top = $stack[\array_key_last($stack)];
-        if ($endsWithSpoilerMarker && $top[0] === '||' && $top[1] === $messageLen) {
+        if ($endsWithSpoilerMarker && $top[0] === '||' && $top[1] === $lineEnd) {
             $stack = \array_slice($stack, 0, -1);
             $type = 'expandable_blockquote';
             $top = $stack ? $stack[\array_key_last($stack)] : ['', 0];
@@ -382,32 +384,12 @@ final class Entities
         }
         $stack = \array_slice($stack, 0, -1);
         $start = $top[1];
-        $lengthReal = self::trimmedLength($message, $messageLen-$start);
+        $lengthReal = $end - $start;
         if ($lengthReal > 0 && $start >= 0) {
             /** @var int<1, max> $lengthReal */
             return [$stack, ['type' => $type, 'offset' => $start, 'length' => $lengthReal]];
         }
         return [$stack, null];
-    }
-
-    /**
-     * Length of an entity ending at the end of the message, without trailing whitespace.
-     *
-     * @psalm-pure
-     */
-    private static function trimmedLength(string $message, int $length): int
-    {
-        for ($x = \strlen($message)-1; $x >= 0; $x--) {
-            if (!(
-                $message[$x] === ' '
-                || $message[$x] === "\r"
-                || $message[$x] === "\n"
-            )) {
-                break;
-            }
-            $length--;
-        }
-        return $length;
     }
 
     /**
@@ -481,7 +463,7 @@ final class Entities
             $length += self::parseNode($sub, $offset+$length, $message, $entities);
         }
         if ($entity !== null) {
-            $lengthReal = self::trimmedLength($message, $length);
+            $lengthReal = $length;
             if ($lengthReal > 0) {
                 \assert($offset >= 0);
                 $entity['offset'] = $offset;

@@ -445,7 +445,8 @@ class EntitiesTest extends TestCase
                 return $e;
             }, $entitiesApi);
             $this->assertEquals($bare, $resultApi['result']['text']);
-            $this->assertEquals(self::sortEntities($entities), self::sortEntities(\array_values(\array_filter(
+            // The Bot API splits nested entities into non-overlapping ones: compare the entities applied to each character
+            $this->assertEquals(self::coverage($bare, $entities), self::coverage($bare, \array_values(\array_filter(
                 $entitiesApi,
                 // Entities detected by the server
                 static fn (array $e): bool => !\in_array($e['type'], ['url', 'email', 'phone_number', 'mention', 'bot_command', 'hashtag', 'cashtag', 'bank_card_number'], true)
@@ -454,7 +455,7 @@ class EntitiesTest extends TestCase
 
         if (\strtolower($mode) === 'html') {
             $this->assertEquals(
-                \trim(\str_replace(['<br/>', ' </b>', 'mention:'], ['<br>', '</b> ', 'tg://user?id='], $htmlReverse ?? $html)),
+                \trim(\str_replace(['<br/>', 'mention:'], ['<br>', 'tg://user?id='], $htmlReverse ?? $html)),
                 $result->toHTML(true)
             );
             $result = self::render(message: EntityTools::htmlEscape($html), parse_mode: $mode);
@@ -471,10 +472,28 @@ class EntitiesTest extends TestCase
         }
     }
 
-    private static function sortEntities(array $entities): array
+    /**
+     * Get the entities applied to each UTF-16 code unit of the text.
+     *
+     * @return list<list<string>>
+     */
+    private static function coverage(string $text, array $entities): array
     {
-        \usort($entities, static fn (array $a, array $b): int => [$a['offset'], -$a['length'], $a['type']] <=> [$b['offset'], -$b['length'], $b['type']]);
-        return $entities;
+        $length = EntityTools::mbStrlen($text);
+        $result = $length ? \array_fill(0, $length, []) : [];
+        foreach ($entities as $entity) {
+            $key = $entity;
+            unset($key['offset'], $key['length']);
+            \ksort($key);
+            $key = \json_encode($key);
+            for ($x = $entity['offset']; $x < \min($length, $entity['offset'] + $entity['length']); $x++) {
+                $result[$x][] = $key;
+            }
+        }
+        foreach ($result as &$keys) {
+            \sort($keys);
+        }
+        return $result;
     }
 
     private function assertNoRelevantEntities(array $entities): void
@@ -549,6 +568,7 @@ class EntitiesTest extends TestCase
                         'type' => 'bold',
                     ],
                 ],
+                'test<b>test</b>',
             ],
             [
                 'html',
@@ -557,7 +577,7 @@ class EntitiesTest extends TestCase
                 [
                     [
                         'offset' => 6,
-                        'length' => 4,
+                        'length' => 5,
                         'type' => 'bold',
                     ],
                 ],
@@ -803,7 +823,7 @@ class EntitiesTest extends TestCase
                 [
                     [
                         'offset' => 0,
-                        'length' => 4,
+                        'length' => 5,
                         'type' => 'text_link',
                         'url' => 'https://google.com/',
                     ],
@@ -887,12 +907,11 @@ class EntitiesTest extends TestCase
                 [
                     [
                         'offset' => 0,
-                        'length' => 4,
+                        'length' => 5,
                         'type' => 'text_link',
                         'url' => 'https://google.com/',
                     ],
                 ],
-                '<a href="https://google.com/">link</a> test',
             ],
             [
                 'html',
@@ -1041,14 +1060,14 @@ class EntitiesTest extends TestCase
                 "quote\nline 2\nnot quoted",
                 [
                     ['offset' => 11, 'length' => 1, 'type' => 'bold'],
-                    ['offset' => 0, 'length' => 12, 'type' => 'blockquote'],
+                    ['offset' => 0, 'length' => 13, 'type' => 'blockquote'],
                 ],
             ],
             [
                 'markdown',
                 "text\n**>quote\n>line 2||\nnot quoted",
                 "text\nquote\nline 2\nnot quoted",
-                [['offset' => 5, 'length' => 12, 'type' => 'expandable_blockquote']],
+                [['offset' => 5, 'length' => 13, 'type' => 'expandable_blockquote']],
             ],
             [
                 'markdown',

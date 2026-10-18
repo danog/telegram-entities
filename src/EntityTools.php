@@ -255,6 +255,6 @@ final class EntityTools
      */
     public static function markdownUrlEscape(string $what): string
     {
-        return \str_replace(')', '\\)', $what);
+        return \str_replace(['\\', ')'], ['\\\\', '\\)'], $what);
     }
 }
