@@ -412,16 +412,23 @@ class EntitiesTest extends TestCase
             $dest = \getenv("DEST");
         }
         if (isset($token, $dest) && $token && $dest) {
-            $resultApi = \json_decode(self::$client->request(new Request(
-                "https://api.telegram.org/bot{$token}/sendMessage?".\http_build_query([
-                    'chat_id'=> $dest,
-                    'parse_mode'=> match ($mode) {
-                        'markdown' => 'MarkdownV2',
-                        'html' => 'html'
-                    },
-                    'text' => $html
-                ])
-            ))->getBody()->buffer(), true);
+            // The jobs of the CI share the bot, and can hit its flood limits
+            do {
+                $resultApi = \json_decode(self::$client->request(new Request(
+                    "https://api.telegram.org/bot{$token}/sendMessage?".\http_build_query([
+                        'chat_id'=> $dest,
+                        'parse_mode'=> match ($mode) {
+                            'markdown' => 'MarkdownV2',
+                            'html' => 'html'
+                        },
+                        'text' => $html
+                    ])
+                ))->getBody()->buffer(), true);
+                $retryAfter = $resultApi['parameters']['retry_after'] ?? null;
+                if ($retryAfter !== null) {
+                    \Amp\delay($retryAfter + 1);
+                }
+            } while ($retryAfter !== null);
 
             if (!isset($resultApi['result'])) {
                 throw new AssertionError(\json_encode($resultApi));
